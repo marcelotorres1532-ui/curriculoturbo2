@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Currículo PRO + Vagas Reais</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+    .container { max-width: 500px; margin: 20px auto; background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+    .header { background: #00b1ea; color: white; padding: 25px; text-align: center; }
+    .header h1 { font-size: 24px; margin-bottom: 8px.
+
+    .header p { font-size: 14px; opacity: 0.9; }
+    .form { padding: 25px; }
+    input { width: 100%; padding: 14px; margin: 12px 0; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 16px; transition: 0.3s; }
+    input:focus { border-color: #00b1ea; outline: none; }
+    button { width: 100%; padding: 16px; margin: 20px 0; background: #00b894; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0,184,148,0.3); transition: 0.3s; }
+    button:hover { background: #00a07a; transform: translateY(-2px); }
+    #vagas { padding: 0 25px 25px; }
+    .vaga { background: #f8f9fa; border-left: 4px solid #00b1ea; padding: 12px; margin: 10px 0; border-radius: 8px; font-size: 15px; }
+    .vaga a { color: #00b1ea; text-decoration: none; font-weight: bold; }
+    .vaga a:hover { text-decoration: underline; }
+    .loading { text-align: center; color: #666; font-style: italic; margin: 15px 0; }
+    .footer { text-align: center; padding: 15px; font-size: 12px; color: color: #aaa; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Currículo PRO + Vagas Reais</h1>
+    <p>Preencha e receba em 10 segundos!</p>
+  </div>
+
+  <div class="form">
+    <input type="text" id="nome" placeholder="Seu Nome Completo" />
+    <input type="text" id="cargo" placeholder="Cargo Desejado (ex: Desenvolvedor)" />
+    <input type="text" id="cidade" placeholder="Cidade (ex: São Paulo)" />
+    <input type="text" id="exp" placeholder="Anos de Experiência" />
+
+    <button onclick="gerarTudo()">GERAR CURRÍCULO + VAGAS → R$39,90</button>
+  </div>
+
+  <div id="vagas"></div>
+  <div class="footer">© 2025 Currículo Turbo | Vagas via Indeed</div>
+</div>
+
+<script>
+async function gerarTudo() {
+  const dados = {
+    nome: document.getElementById('nome').value.trim() || "João Silva",
+    cargo: document.getElementById('cargo').value.trim() || "Desenvolvedor",
+    cidade: document.getElementById('cidade').value.trim() || "São Paulo",
+    exp: document.getElementById('exp').value.trim() || "2"
+  };
+
+  document.getElementById('vagas').innerHTML = '<div class="loading">Buscando vagas reais no Indeed...</div>';
+
+  try {
+    const query = encodeURIComponent(`${dados.cargo} ${dados.cidade}`);
+    const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://br.indeed.com/jobs?q=' + query + '&l=')}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.contents, 'text/html');
+    
+    const jobLinks = Array.from(doc.querySelectorAll('h2 a')).slice(0, 5);
+    const vagas = jobLinks.map(a => {
+      const titulo = a.getAttribute('title') || a.innerText.trim();
+      const href = a.getAttribute('href');
+      const link = href?.startsWith('/rc/') ? 'https://br.indeed.com' + href : href;
+      return { titulo, link };
+    }).filter(v => v.link);
+
+    let html = `<h3 style="margin:20px 0 10px; color:#00b1ea;">Vagas Reais para Você:</h3>`;
+    if (vagas.length > 0) {
+      vagas.forEach(v => {
+        html += `<div class="vaga">
+          <strong>${v.titulo}</strong><br>
+          <a href="${v.link}" target="_blank">Abrir vaga no Indeed</a>
+        </div>`;
+      });
+    } else {
+      html += `<div class="vaga">Nenhuma vaga encontrada. Tente outro cargo ou cidade.</div>`;
+    }
+    document.getElementById('vagas').innerHTML = html;
+
+  } catch (error) {
+    document.getElementById('vagas').innerHTML = `<div class="vaga">Erro ao carregar vagas. Tente novamente.</div>`;
+  }
+
+  setTimeout(() => {
+    const linkPagamento = "https://mpago.li/1YvhuxL";
+    window.open(linkPagamento, '_blank');
+    alert('Pague R$39,90 e receba seu currículo PRO + vagas por WhatsApp em 10s!');
+  }, 1500);
+}
+</script>
+
+</body>
+</html>
