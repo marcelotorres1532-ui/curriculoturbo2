@@ -29,4 +29,192 @@
       background: linear-gradient(135deg, #00c6ff, #0072ff); 
       color: white; 
       padding: 30px 25px; 
-      text-align: center;
+      text-align: center; 
+    }
+    .header h1 { 
+      font-size: 28px; 
+      font-weight: 700; 
+      margin-bottom: 8px; 
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .header p { 
+      font-size: 16px; 
+      opacity: 0.95; 
+      font-weight: 400;
+    }
+
+    .form { padding: 30px 25px; }
+    .input-group { position: relative; margin-bottom: 18px; }
+    .input-group input { 
+      width: 100%; 
+      padding: 16px 16px 16px 50px; 
+      border: 2px solid #e0e0e0; 
+      border-radius: 14px; 
+      font-size: 16px; 
+      transition: all 0.3s; 
+      background: #f8f9fa;
+    }
+    .input-group input:focus { 
+      border-color: #0072ff; 
+      outline: none; 
+      background: white;
+      box-shadow: 0 0 0 4px rgba(0,114,255,0.1);
+    }
+    .input-group::before { 
+      content: ''; 
+      position: absolute; 
+      left: 18px; 
+      top: 50%; 
+      transform: translateY(-50%); 
+      width: 20px; 
+      height: 20px; 
+      background: #0072ff; 
+      border-radius: 50%; 
+      opacity: 0.1;
+    }
+
+    button { 
+      width: 100%; 
+      padding: 18px; 
+      margin: 25px 0 10px; 
+      background: linear-gradient(135deg, #00d25b, #00b894); 
+      color: white; 
+      border: none; 
+      border-radius: 16px; 
+      font-size: 18px; 
+      font-weight: 700; 
+      cursor: pointer; 
+      box-shadow: 0 8px 20px rgba(0,210,91,0.3); 
+      transition: all 0.3s; 
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    button:hover { 
+      transform: translateY(-3px); 
+      box-shadow: 0 12px 25px rgba(0,210,91,0.4); 
+    }
+
+    #vagas { 
+      padding: 0 25px 30px; 
+    }
+    .vaga { 
+      background: #f0f7ff; 
+      border-left: 5px solid #0072ff; 
+      padding: 16px; 
+      margin: 12px 0; 
+      border-radius: 12px; 
+      font-size: 15px; 
+      transition: all 0.3s;
+    }
+    .vaga:hover { 
+      transform: translateX(5px); 
+      box-shadow: 0 5px 15px rgba(0,114,255,0.1);
+    }
+    .vaga a { 
+      color: #0072ff; 
+      text-decoration: none; 
+      font-weight: 600; 
+    }
+    .vaga a:hover { text-decoration: underline; }
+
+    .loading { 
+      text-align: center; 
+      color: #666; 
+      font-style: italic; 
+      margin: 20px 0; 
+      font-size: 15px;
+    }
+
+    .footer { 
+      text-align: center; 
+      padding: 20px; 
+      font-size: 13px; 
+      color: #999; 
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Currículo PRO + Vagas</h1>
+    <p>Preencha e receba em 10 segundos!</p>
+  </div>
+
+  <div class="form">
+    <div class="input-group">
+      <input type="text" id="nome" placeholder="Seu Nome Completo" />
+    </div>
+    <div class="input-group">
+      <input type="text" id="cargo" placeholder="Cargo Desejado (ex: Vendedor)" />
+    </div>
+    <div class="input-group">
+      <input type="text" id="cidade" placeholder="Cidade (ex: São Paulo)" />
+    </div>
+    <div class="input-group">
+      <input type="text" id="exp" placeholder="Anos de Experiência" />
+    </div>
+
+    <button onclick="gerarTudo()">GERAR CURRÍCULO + VAGAS → R$39,90</button>
+  </div>
+
+  <div id="vagas"></div>
+  <div class="footer">© 2025 Currículo Turbo | Vagas via Indeed</div>
+</div>
+
+<script>
+async function gerarTudo() {
+  const dados = {
+    nome: document.getElementById('nome').value.trim() || "João Silva",
+    cargo: document.getElementById('cargo').value.trim() || "Vendedor",
+    cidade: document.getElementById('cidade').value.trim() || "São Paulo",
+    exp: document.getElementById('exp').value.trim() || "2"
+  };
+
+  document.getElementById('vagas').innerHTML = '<div class="loading">Buscando vagas reais no Indeed...</div>';
+
+  try {
+    const query = encodeURIComponent(`${dados.cargo} ${dados.cidade}`);
+    const url = `https://api.allorigins.win/get?url=${encodeURIComponent('https://br.indeed.com/jobs?q=' + query + '&l=')}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data.contents, 'text/html');
+    
+    const jobLinks = Array.from(doc.querySelectorAll('h2 a')).slice(0, 5);
+    const vagas = jobLinks.map(a => {
+      const titulo = a.getAttribute('title') || a.innerText.trim();
+      const href = a.getAttribute('href');
+      const link = href?.startsWith('/rc/') ? 'https://br.indeed.com' + href : href;
+      return { titulo, link };
+    }).filter(v => v.link);
+
+    let html = `<h3 style="margin:20px 0 10px; color:#0072ff; font-weight:600;">Vagas Reais para Você:</h3>`;
+    if (vagas.length > 0) {
+      vagas.forEach(v => {
+        html += `<div class="vaga">
+          <strong>${v.titulo}</strong><br>
+          <a href="${v.link}" target="_blank">Abrir vaga no Indeed →</a>
+        </div>`;
+      });
+    } else {
+      html += `<div class="vaga">Nenhuma vaga encontrada. Tente outro cargo ou cidade.</div>`;
+    }
+    document.getElementById('vagas').innerHTML = html;
+
+  } catch (error) {
+    document.getElementById('vagas').innerHTML = `<div class="vaga">Erro ao carregar vagas. Tente novamente.</div>`;
+  }
+
+  setTimeout(() => {
+    const linkPagamento = "https://mpago.li/1YvhuxL";
+    window.open(linkPagamento, '_blank');
+    alert('Pague R$39,90 e receba seu currículo PRO + vagas por WhatsApp em 10s!');
+  }, 1500);
+}
+</script>
+
+</body>
+</html>
